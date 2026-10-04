@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDForge AI - Student & Faculty ID Management Platform | Chennai Institute of Technology</title>
+    
+    <!-- Meta & SEO -->
+    <meta name="description" content="AI-Powered Student & Faculty ID Card Generator, AES Encrypted QR Cryptography, Photo Quality Checker & Disciplinary Case Management System for Chennai Institute of Technology.">
+    <meta name="theme-color" content="#090d16">
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- External Libraries: CryptoJS, QRCode, PapaParse, html2canvas, jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- App Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Header / Navbar -->
+        <nav class="navbar">
+            <a href="#" class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="shield-check"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>IDForge AI</h1>
+                    <p>Chennai Institute of Technology</p>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li><button class="nav-btn active" data-tab="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button></li>
+                <li><button class="nav-btn" data-tab="cards-browser"><i data-lucide="id-card"></i> ID Studio & Browser</button></li>
+                <li><button class="nav-btn" data-tab="directory"><i data-lucide="users"></i> Person Directory</button></li>
+                <li><button class="nav-btn" data-tab="disciplinary"><i data-lucide="scale"></i> Disciplinary Hub</button></li>
+                <li><button class="nav-btn" data-tab="crypto"><i data-lucide="qr-code"></i> AES QR & AI Tools</button></li>
+            </ul>
+
+            <div class="nav-actions">
+                <div class="user-badge" id="auth-status-badge">
+                    <span class="user-status-dot"></span>
+                    <span id="user-role-text">Admin Authenticated</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btn-login-modal">
+                    <i data-lucide="log-in"></i> Admin Login
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content View -->
+        <main class="main-content">
+            
+            <!-- TAB 1: DASHBOARD -->
+            <section id="dashboard" class="tab-pane active">
+                <div class="action-banner">
+                    <div class="banner-text">
+                        <h2>Welcome to CIT IDForge AI Portal</h2>
+                        <p>Managing 5,000+ Students & Faculty Records with AES-128 Security & AI Photo Intelligence</p>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem;">
+                        <button class="btn btn-primary" onclick="openAddStudentModal()"><i data-lucide="user-plus"></i> Add Student (Smart Studio)</button>
+                        <button class="btn btn-secondary" onclick="openAddFacultyModal()"><i data-lucide="award"></i> Add Faculty</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i data-lucide="graduation-cap"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-total-students">5,000</h3>
+                            <p>Enrolled Students</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i data-lucide="briefcase"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-total-faculty">1</h3>
+                            <p>Faculty Members</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon amber"><i data-lucide="scale"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-active-cases">0</h3>
+                            <p>Active Disciplinary Cases</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i data-lucide="shield-alert"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-qr-verifications">128</h3>
+                            <p>Verified Scans</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Breakdown & Quick Stats -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                    <div class="stat-card" style="flex-direction: column; align-items: stretch; grid-column: span 2;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700;"><i data-lucide="pie-chart"></i> Department Distribution</h3>
+                            <span class="badge badge-blue">8 Departments</span>
+                        </div>
+                        <div id="dept-distribution-bars" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <!-- Dynamically loaded bars -->
+                        </div>
+                    </div>
+
+                    <div class="stat-card" style="flex-direction: column; align-items: stretch;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;"><i data-lucide="zap"></i> Quick Operations</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                            <button class="btn btn-secondary" onclick="switchTab('cards-browser')" style="justify-content: flex-start;">
+                                <i data-lucide="eye"></i> Launch Paginated Card Browser
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportAllCardsPNG()" style="justify-content: flex-start;">
+                                <i data-lucide="image"></i> Export All ID Cards (PNG)
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportAllCardsPDF()" style="justify-content: flex-start;">
+                                <i data-lucide="file-text"></i> Export All ID Cards (PDF)
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchTab('crypto')" style="justify-content: flex-start;">
+                                <i data-lucide="qr-code"></i> Open AES QR Code Verifier
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ID CARD STUDIO & BROWSER -->
+            <section id="cards-browser" class="tab-pane">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="browser-search" placeholder="Search by Student/Faculty ID or Name..." oninput="filterCards()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="browser-dept-filter" class="select-input" onchange="filterCards()">
+                            <option value="ALL">All Departments</option>
+                            <option value="CSE">CSE</option>
+                            <option value="IT">IT</option>
+                            <option value="ECE">ECE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="AIDS">AIDS</option>
+                            <option value="AIML">AIML</option>
+                        </select>
+
+                        <select id="browser-year-filter" class="select-input" onchange="filterCards()">
+                            <option value="ALL">All Years</option>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4</option>
+                        </select>
+
+                        <select id="browser-type-filter" class="select-input" onchange="filterCards()">
+                            <option value="ALL">All Roles</option>
+                            <option value="Student">Students Only</option>
+                            <option value="Faculty">Faculty Only</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleCardFlip()"><i data-lucide="rotate-3d"></i> Flip Card</button>
+                        <button class="btn btn-primary btn-sm" onclick="exportCurrentCardPNG()"><i data-lucide="download"></i> Download PNG</button>
+                    </div>
+                </div>
+
+                <div class="cards-browser-container">
+                    <div class="card-stage">
+                        <div class="id-card-wrapper" id="id-card-wrapper" onclick="toggleCardFlip()">
+                            <!-- Card Front -->
+                            <div class="id-card-face id-card-front" id="card-front-content">
+                                <!-- Rendered dynamically -->
+                            </div>
+
+                            <!-- Card Back -->
+                            <div class="id-card-face id-card-back" id="card-back-content">
+                                <div>
+                                    <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 0.4rem; margin-bottom: 0.6rem;">
+                                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #1e293b;">TERMS & CONDITIONS</h4>
+                                    </div>
+                                    <p style="font-size: 0.68rem; color: #475569; line-height: 1.4;">
+                                        1. This card is non-transferable and must be presented upon request by authorized college authorities.<br>
+                                        2. If found, please return to: Chennai Institute of Technology, SH-49, Sarathy Nagar, Kundrathur, Chennai - 600069.<br>
+                                        3. Loss of card must be reported immediately to the Academic Admin Office.
+                                    </p>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #e2e8f0; padding-top: 0.6rem;">
+                                        <div>
+                                            <p style="font-size: 0.68rem; font-weight: 700; color: #1e293b;">Emergency Contact:</p>
+                                            <p style="font-size: 0.68rem; color: #475569;" id="card-back-emergency">+91 44 7120 2000</p>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div id="card-back-barcode" style="font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 2px; font-weight: bold; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">
+                                                *CIT-2026-9001*
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Controls -->
+                    <div class="pagination-bar">
+                        <button class="btn btn-secondary btn-sm" id="btn-card-prev" onclick="prevCard()"><i data-lucide="chevron-left"></i> Previous</button>
+                        <span style="font-size: 0.9rem; font-weight: 600;" id="lbl-card-count">Showing 1 of 5000</span>
+                        <button class="btn btn-secondary btn-sm" id="btn-card-next" onclick="nextCard()">Next <i data-lucide="chevron-right"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: PERSON DIRECTORY -->
+            <section id="directory" class="tab-pane">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="directory-search" placeholder="Search directory by Name, ID, Department, Email..." oninput="filterDirectoryTable()">
+                    </div>
+                    <div style="display: flex; gap: 0.8rem;">
+                        <button class="btn btn-primary" onclick="openAddStudentModal()"><i data-lucide="user-plus"></i> New Student</button>
+                        <button class="btn btn-secondary" onclick="openAddFacultyModal()"><i data-lucide="award"></i> New Faculty</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Department</th>
+                                <th>Year / Desig</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="directory-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 4: DISCIPLINARY HUB -->
+            <section id="disciplinary" class="tab-pane">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="case-search" placeholder="Search cases by Case ID, Person ID, or Name..." oninput="filterCaseTable()">
+                    </div>
+
+                    <div class="filter-group">
+                        <select id="case-status-filter" class="select-input" onchange="filterCaseTable()">
+                            <option value="ALL">All Case Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Closed">Closed</option>
+                            <option value="Dismissed">Dismissed</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 0.8rem;">
+                        <button class="btn btn-danger" onclick="openAddCaseModal()"><i data-lucide="plus-circle"></i> Log Disciplinary Case</button>
+                        <button class="btn btn-secondary" onclick="exportCasesPDF()"><i data-lucide="file-text"></i> Export Cases PDF</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Person ID</th>
+                                <th>Name & Role</th>
+                                <th>Violation Type</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action Taken</th>
+                                <th>Manage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cases-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 5: AES QR CRYPTOGRAPHY & AI TOOLS -->
+            <section id="crypto" class="tab-pane">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+                    
+                    <!-- AES QR Payload Verifier -->
+                    <div class="stat-card" style="flex-direction: column; align-items: stretch;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;"><i data-lucide="lock"></i> AES-128 QR Verification Tool</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            Simulate physical scanner decryption of signed QR codes. Enter Person ID or paste encrypted ciphertext.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Lookup Person ID:</label>
+                            <input type="number" id="verify-person-id" class="form-control" placeholder="e.g. 1 or 9001">
+                        </div>
+                        <button class="btn btn-primary" onclick="verifyQRById()"><i data-lucide="key-round"></i> Verify & Decrypt Payload</button>
+
+                        <div id="verify-result-box" style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.4); border-radius: var(--radius-sm); border: 1px solid var(--border-glass); font-family: var(--font-mono); font-size: 0.82rem; display: none;">
+                            <!-- Payload result -->
+                        </div>
+                    </div>
+
+                    <!-- Photo Quality & Sharpness Analyzer AI -->
+                    <div class="stat-card" style="flex-direction: column; align-items: stretch;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;"><i data-lucide="image"></i> Photo Quality AI (Laplacian Sharpness & Perceptual Hash)</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            Upload a photo to evaluate blurriness score (Laplacian variance) and check for duplicate faces across records.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Upload Photo for AI Inspection:</label>
+                            <input type="file" id="photo-ai-file" class="form-control" accept="image/*" onchange="analyzePhotoAI(event)">
+                        </div>
+                        <div id="photo-ai-result" style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.4); border-radius: var(--radius-sm); border: 1px solid var(--border-glass); font-size: 0.85rem; display: none;">
+                            <!-- AI analysis output -->
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- MODALS SECTION -->
+    <!-- ========================================================================== -->
+
+    <!-- Admin Login Modal -->
+    <div class="modal-overlay" id="modal-login">
+        <div class="modal-container" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="lock"></i> Admin Authentication Gate</h3>
+                <button class="modal-close" onclick="closeModal('modal-login')">&times;</button>
+            </div>
+            <form id="form-login" onsubmit="handleAdminLogin(event)">
+                <div class="modal-body">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Authentication required to access student datasets and disciplinary system. Default credentials: <code>admin</code> / <code>Admin@123</code>.
+                    </p>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Username</label>
+                        <input type="text" id="login-username" class="form-control" value="admin" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Password</label>
+                        <input type="password" id="login-password" class="form-control" value="Admin@123" required>
+                    </div>
+                    <div id="login-error" style="color: var(--danger); font-size: 0.82rem; display: none; margin-top: 0.5rem;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-login')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i data-lucide="log-in"></i> Authenticate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student Modal (SMART AI REGISTRATION & PHOTO CLARIFICATION HUD) -->
+    <div class="modal-overlay" id="modal-add-student">
+        <div class="modal-container" style="max-width: 1050px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="sparkles" style="color: var(--cyan);"></i> Smart AI Student Registration & Image Clarification Studio</h3>
+                <button class="modal-close" onclick="closeModal('modal-add-student')">&times;</button>
+            </div>
+            <form id="form-add-student" onsubmit="handleSaveStudent(event)">
+                <div class="modal-body">
+                    <div class="registration-hud-grid">
+                        
+                        <!-- Left Column: Registration Inputs & Image Clarification Controls -->
+                        <div class="hud-panel">
+                            <div class="hud-header">
+                                <h4><i data-lucide="user-check"></i> Student Details & Photo AI</h4>
+                                <span class="badge badge-blue">Live Processing</span>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Student ID</label>
+                                    <input type="number" id="st-id" class="form-control" required placeholder="e.g. 5001" oninput="updateLiveIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="st-name" class="form-control" required placeholder="e.g. Ananya Sharma" oninput="updateLiveIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <select id="st-dept" class="select-input" required onchange="updateLiveIDPreview()">
+                                        <option value="CSE">CSE</option>
+                                        <option value="IT">IT</option>
+                                        <option value="ECE">ECE</option>
+                                        <option value="EEE">EEE</option>
+                                        <option value="MECH">MECH</option>
+                                        <option value="CIVIL">CIVIL</option>
+                                        <option value="AIDS">AIDS</option>
+                                        <option value="AIML">AIML</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Year</label>
+                                    <select id="st-year" class="select-input" required onchange="updateLiveIDPreview()">
+                                        <option value="1">1st Year</option>
+                                        <option value="2">2nd Year</option>
+                                        <option value="3">3rd Year</option>
+                                        <option value="4">4th Year</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Blood Group</label>
+                                    <input type="text" id="st-blood" class="form-control" placeholder="e.g. O+" oninput="updateLiveIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" id="st-phone" class="form-control" placeholder="e.g. 9876543210" oninput="updateLiveIDPreview()">
+                                </div>
+                            </div>
+
+                            <!-- Photo Upload & AI Clarification Box -->
+                            <div class="clarification-box">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <label style="font-weight: 700; font-size: 0.85rem; color: #ffffff;"><i data-lucide="sliders"></i> AI Photo Clarification & Filters</label>
+                                    <span id="live-clarity-badge" class="badge badge-green">Sharpness: 98% (Crisp)</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <input type="file" id="st-photo" class="form-control" accept="image/*" onchange="handlePhotoUploadClarify(event)">
+                                </div>
+
+                                <!-- Sliders for Live Photo Clarification -->
+                                <div class="slider-group">
+                                    <label><span>Brightness</span><span id="lbl-val-bright">100%</span></label>
+                                    <input type="range" id="slider-bright" class="range-slider" min="50" max="180" value="100" oninput="applyLivePhotoFilter()">
+                                </div>
+
+                                <div class="slider-group">
+                                    <label><span>Contrast & Sharpness</span><span id="lbl-val-contrast">110%</span></label>
+                                    <input type="range" id="slider-contrast" class="range-slider" min="80" max="200" value="110" oninput="applyLivePhotoFilter()">
+                                </div>
+
+                                <div class="slider-group">
+                                    <label><span>Color Saturation</span><span id="lbl-val-saturate">100%</span></label>
+                                    <input type="range" id="slider-saturate" class="range-slider" min="50" max="180" value="100" oninput="applyLivePhotoFilter()">
+                                </div>
+
+                                <!-- Quick Presets -->
+                                <div class="preset-btn-group">
+                                    <button type="button" class="preset-btn" onclick="setFilterPreset('auto')">✨ Auto Clarify</button>
+                                    <button type="button" class="preset-btn" onclick="setFilterPreset('hd')">📸 Crisp HD</button>
+                                    <button type="button" class="preset-btn" onclick="setFilterPreset('light')">💡 Studio Light</button>
+                                    <button type="button" class="preset-btn" onclick="setFilterPreset('reset')">🔄 Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Real-Time Holographic ID Card Preview HUD -->
+                        <div class="hud-panel scanline-preview" style="align-items: center; justify-content: center; background: rgba(9, 13, 22, 0.8);">
+                            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                                <span style="font-size: 0.8rem; font-weight: 800; color: var(--cyan); letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.4rem;">
+                                    <span class="user-status-dot"></span> LIVE ID CARD HUD PREVIEW
+                                </span>
+                                <span class="badge badge-blue">AES-128 Encrypted</span>
+                            </div>
+
+                            <!-- Live Rendered Card Target -->
+                            <div class="id-card-wrapper" id="live-hud-card" style="transform: scale(0.92); transform-origin: top center;">
+                                <div class="id-card-face id-card-front" id="live-hud-front">
+                                    <!-- Dynamic Live Card Content -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-student')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i data-lucide="check-circle"></i> Confirm & Save Student Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Faculty Modal (SMART AI FACULTY REGISTRATION & PHOTO CLARIFICATION HUD) -->
+    <div class="modal-overlay" id="modal-add-faculty">
+        <div class="modal-container" style="max-width: 1050px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="sparkles" style="color: var(--warning);"></i> Smart AI Faculty Registration & Image Clarification Studio</h3>
+                <button class="modal-close" onclick="closeModal('modal-add-faculty')">&times;</button>
+            </div>
+            <form id="form-add-faculty" onsubmit="handleSaveFaculty(event)">
+                <div class="modal-body">
+                    <div class="registration-hud-grid">
+                        
+                        <!-- Left Column: Faculty Registration Inputs & Image Clarification Controls -->
+                        <div class="hud-panel">
+                            <div class="hud-header">
+                                <h4><i data-lucide="award"></i> Faculty Details & Photo AI</h4>
+                                <span class="badge badge-amber">Live Processing</span>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Faculty ID (Numeric)</label>
+                                    <input type="number" id="fc-id" class="form-control" required placeholder="e.g. 9002" oninput="updateLiveFacultyIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="fc-name" class="form-control" required placeholder="e.g. Dr. S. Vignesh" oninput="updateLiveFacultyIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <select id="fc-dept" class="select-input" required onchange="updateLiveFacultyIDPreview()">
+                                        <option value="CSE">CSE</option>
+                                        <option value="IT">IT</option>
+                                        <option value="ECE">ECE</option>
+                                        <option value="EEE">EEE</option>
+                                        <option value="MECH">MECH</option>
+                                        <option value="CIVIL">CIVIL</option>
+                                        <option value="AIDS">AIDS</option>
+                                        <option value="AIML">AIML</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Designation</label>
+                                    <input type="text" id="fc-desig" class="form-control" placeholder="e.g. Associate Professor" oninput="updateLiveFacultyIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" id="fc-phone" class="form-control" placeholder="e.g. 9876543210" oninput="updateLiveFacultyIDPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Date of Birth</label>
+                                    <input type="date" id="fc-dob" class="form-control" onchange="updateLiveFacultyIDPreview()">
+                                </div>
+                            </div>
+
+                            <!-- Photo Upload & AI Clarification Box for Faculty -->
+                            <div class="clarification-box">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <label style="font-weight: 700; font-size: 0.85rem; color: #ffffff;"><i data-lucide="sliders"></i> AI Photo Clarification & Filters</label>
+                                    <span id="live-fc-clarity-badge" class="badge badge-green">Sharpness: 98% (Crisp)</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <input type="file" id="fc-photo" class="form-control" accept="image/*" onchange="handleFacultyPhotoUploadClarify(event)">
+                                </div>
+
+                                <!-- Sliders for Live Photo Clarification -->
+                                <div class="slider-group">
+                                    <label><span>Brightness</span><span id="lbl-val-fc-bright">100%</span></label>
+                                    <input type="range" id="slider-fc-bright" class="range-slider" min="50" max="180" value="100" oninput="applyLiveFacultyPhotoFilter()">
+                                </div>
+
+                                <div class="slider-group">
+                                    <label><span>Contrast & Sharpness</span><span id="lbl-val-fc-contrast">110%</span></label>
+                                    <input type="range" id="slider-fc-contrast" class="range-slider" min="80" max="200" value="110" oninput="applyLiveFacultyPhotoFilter()">
+                                </div>
+
+                                <div class="slider-group">
+                                    <label><span>Color Saturation</span><span id="lbl-val-fc-saturate">100%</span></label>
+                                    <input type="range" id="slider-fc-saturate" class="range-slider" min="50" max="180" value="100" oninput="applyLiveFacultyPhotoFilter()">
+                                </div>
+
+                                <!-- Quick Presets -->
+                                <div class="preset-btn-group">
+                                    <button type="button" class="preset-btn" onclick="setFacultyFilterPreset('auto')">✨ Auto Clarify</button>
+                                    <button type="button" class="preset-btn" onclick="setFacultyFilterPreset('hd')">📸 Crisp HD</button>
+                                    <button type="button" class="preset-btn" onclick="setFacultyFilterPreset('light')">💡 Studio Light</button>
+                                    <button type="button" class="preset-btn" onclick="setFacultyFilterPreset('reset')">🔄 Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Real-Time Holographic Faculty ID Card Preview HUD -->
+                        <div class="hud-panel scanline-preview" style="align-items: center; justify-content: center; background: rgba(9, 13, 22, 0.8);">
+                            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                                <span style="font-size: 0.8rem; font-weight: 800; color: var(--warning); letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.4rem;">
+                                    <span class="user-status-dot" style="background: var(--warning); box-shadow: 0 0 10px var(--warning);"></span> LIVE FACULTY ID CARD HUD PREVIEW
+                                </span>
+                                <span class="badge badge-amber">AES-128 Encrypted</span>
+                            </div>
+
+                            <!-- Live Rendered Card Target -->
+                            <div class="id-card-wrapper" id="live-fc-hud-card" style="transform: scale(0.92); transform-origin: top center;">
+                                <div class="id-card-face id-card-front" id="live-fc-hud-front">
+                                    <!-- Dynamic Live Faculty Card Content -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-faculty')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i data-lucide="check-circle"></i> Confirm & Save Faculty Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Disciplinary Case Modal -->
+    <div class="modal-overlay" id="modal-add-case">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="scale"></i> Log Disciplinary Incident</h3>
+                <button class="modal-close" onclick="closeModal('modal-add-case')">&times;</button>
+            </div>
+            <form id="form-add-case" onsubmit="handleSaveCase(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Case ID</label>
+                            <input type="text" id="case-id-input" class="form-control" required placeholder="e.g. CASE-101">
+                        </div>
+                        <div class="form-group">
+                            <label>Student/Faculty ID</label>
+                            <input type="number" id="case-person-id" class="form-control" required placeholder="e.g. 1" onchange="autoFillCasePersonName()">
+                        </div>
+                        <div class="form-group">
+                            <label>Person Name</label>
+                            <input type="text" id="case-person-name" class="form-control" required readonly placeholder="Auto-filled">
+                        </div>
+                        <div class="form-group">
+                            <label>Case Type</label>
+                            <input type="text" id="case-type-input" class="form-control" required placeholder="e.g. Lab Safety Violation / Exam Malpractice">
+                        </div>
+                        <div class="form-group">
+                            <label>Incident Date</label>
+                            <input type="date" id="case-date-input" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Reported By</label>
+                            <input type="text" id="case-reporter-input" class="form-control" required placeholder="e.g. Lab Supervisor / HOD">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Description</label>
+                            <textarea id="case-desc-input" class="form-control" rows="3" required placeholder="Provide details of the incident..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-case')">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i data-lucide="alert-triangle"></i> Log Incident</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Disciplinary Case Modal -->
+    <div class="modal-overlay" id="modal-update-case">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="edit"></i> Update Case Hearing Status</h3>
+                <button class="modal-close" onclick="closeModal('modal-update-case')">&times;</button>
+            </div>
+            <form id="form-update-case" onsubmit="handleUpdateCaseSubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="update-case-target-id">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Status</label>
+                        <select id="update-case-status" class="select-input">
+                            <option value="Active">Active / Hearing Pending</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Closed">Closed</option>
+                            <option value="Dismissed">Dismissed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Action Taken / Penalty</label>
+                        <textarea id="update-case-action" class="form-control" rows="3" placeholder="Specify decision or disciplinary action..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-update-case')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Hearing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile View Modal -->
+    <div class="modal-overlay" id="modal-profile-view">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title"><i data-lucide="user"></i> Comprehensive Profile</h3>
+                <button class="modal-close" onclick="closeModal('modal-profile-view')">&times;</button>
+            </div>
+            <div class="modal-body" id="profile-modal-content">
+                <!-- Dynamically filled -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-profile-view')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- App JavaScript Script -->
+    <script src="app.js"></script>
+</body>
+</html>

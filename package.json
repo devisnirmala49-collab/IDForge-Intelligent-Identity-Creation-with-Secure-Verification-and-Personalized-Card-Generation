@@ -1,0 +1,20 @@
+{
+  "name": "cit-idforge-ai",
+  "version": "1.0.0",
+  "description": "Chennai Institute of Technology - AI-Powered Student & Faculty ID Generator Web Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "student-id",
+    "faculty-id",
+    "id-card-generator",
+    "ai-photo-checker",
+    "disciplinary-management",
+    "aes-qr-code"
+  ],
+  "author": "Antigravity AI",
+  "license": "MIT"
+}
